@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CalcSolarPro | Calculadora de Protecciones FV - Cuba</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- jsPDF para generar el PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800 flex flex-col min-h-screen">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-md">
+        <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="flex items-center space-x-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                <h1 class="text-xl md:text-2xl font-bold">CalcSolar<span class="text-yellow-400">Pro</span></h1>
+            </div>
+            <p class="text-sm hidden md:block">Protecciones Eléctricas FV - Adaptado a la Norma IEC 62548</p>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8 flex-grow grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Columna de Entradas -->
+        <div class="md:col-span-1 bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+            <h2 class="text-2xl font-semibold text-blue-900 mb-4 border-b pb-2">Datos del Sistema FV</h2>
+            
+            <div class="space-y-4">
+                <div class="bg-yellow-50 p-3 rounded border border-yellow-200">
+                    <h3 class="font-bold text-yellow-800 text-sm mb-2">Configuración del Arreglo DC</h3>
+                    
+                    <label class="block text-sm font-medium mb-1">Potencia del Panel (W)</label>
+                    <input type="number" id="pPanel" value="450" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Tensión Circuito Abierto Voc (V)</label>
+                    <input type="number" id="voc" value="49.8" step="0.1" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Corriente Cortocircuito Isc (A)</label>
+                    <input type="number" id="isc" value="11.4" step="0.1" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Paneles en Serie</label>
+                    <input type="number" id="serie" value="6" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Strings en Paralelo</label>
+                    <input type="number" id="paralelo" value="2" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="bg-blue-50 p-3 rounded border border-blue-200">
+                    <h3 class="font-bold text-blue-800 text-sm mb-2">Condiciones Ambientales (Cuba)</h3>
+                    <label class="block text-sm font-medium mb-1">Temp. Mínima Esperada (°C)</label>
+                    <input type="number" id="tempMin" value="15" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Coef. Temp. Voc (%/°C) <span class="text-gray-500 text-xs">(Ej: -0.03)</span></label>
+                    <input type="number" id="coefTemp" value="-0.03" step="0.01" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+
+                <div class="bg-green-50 p-3 rounded border border-green-200">
+                    <h3 class="font-bold text-green-800 text-sm mb-2">Inversor y Red AC (Cuba)</h3>
+                    <label class="block text-sm font-medium mb-1">Potencia Inversor (W)</label>
+                    <input type="number" id="pInv" value="5000" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-green-500 outline-none">
+                    
+                    <label class="block text-sm font-medium mb-1 mt-2">Voltaje Red AC (V)</label>
+                    <select id="vRed" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-green-500 outline-none">
+                        <option value="110">110V (Fase-Neutro)</option>
+                        <option value="220" selected>220V (Fase-Neutro)</option>
+                    </select>
+                </div>
+
+                <button onclick="calcularTodo()" class="w-full bg-blue-900 text-white py-3 rounded-lg font-bold hover:bg-blue-800 transition duration-300 flex justify-center items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Calcular Sistema
+                </button>
+            </div>
+        </div>
+
+        <!-- Columna de Resultados -->
+        <div class="md:col-span-2 bg-white p-6 rounded-lg shadow-sm border border-gray-200 flex flex-col">
+            <div class="flex justify-between items-center mb-4 border-b pb-2">
+                <h2 class="text-2xl font-semibold text-blue-900">Resultados y Protecciones</h2>
+                <button onclick="generarPDF()" class="hidden md:flex bg-red-600 text-white px-4 py-2 rounded text-sm font-medium hover:bg-red-500 items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Descargar PDF
+                </button>
+            </div>
+
+            <div id="resultados-container" class="flex-grow">
+                <p class="text-gray-500 italic text-center mt-20">Ingrese los datos y presione "Calcular Sistema" para ver los resultados.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer / Disclaimer Actualizado -->
+    <footer class="bg-gray-800 text-gray-400 text-center py-4 text-xs mt-auto">
+        <p>&copy; 2026 CalcSolarPro. Creado por Yohan Manuel Travieso.</p>
+        <p class="mt-1 max-w-3xl mx-auto px-4">Advertencia: Esta calculadora es orientativa. Las instalaciones en Cuba deben cumplir las normas vigentes y ser ejecutadas por personal calificado. Verifique la disponibilidad y especificaciones reales de los componentes en el mercado nacional.</p>
+    </footer>
+
+    <script>
+        // Variables globales para guardar los resultados y usarlos en el PDF
+        let datosCalculados = null;
+
+        function calcularTodo() {
+            // Obtener valores DC
+            let pPanel = parseFloat(document.getElementById('pPanel').value);
+            let voc = parseFloat(document.getElementById('voc').value);
+            let isc = parseFloat(document.getElementById('isc').value);
+            let serie = parseInt(document.getElementById('serie').value);
+            let paralelo = parseInt(document.getElementById('paralelo').value);
+            let tempMin = parseFloat(document.getElementById('tempMin').value);
+            let coefTemp = parseFloat(document.getElementById('coefTemp').value);
+
+            // Obtener valores AC
+            let pInv = parseFloat(document.getElementById('pInv').value);
+            let vRed = parseFloat(document.getElementById('vRed').value);
+
+            // --- CÁLCULOS DC ---
+            let deltaT = tempMin - 25;
+            let factorTemp = 1 + (coefTemp * deltaT);
+            let vMaxArray = voc * serie * factorTemp;
+            let iMaxString = isc * 1.25; 
+            let iMaxArray = iMaxString * paralelo;
+            let pTotal = pPanel * serie * paralelo;
+
+            // Fusible/Breaker DC
+            let iBreakerString = isc * 1.56;
+            let breakersDC = [10, 12, 15, 16, 20, 25, 32, 40];
+            let breakerDC = breakersDC.find(b => b >= iBreakerString) || "Revisar manualmente";
+            let tensionBreakerDC = vMaxArray > 600 ? 1000 : 600; 
+
+            // --- CÁLCULOS AC ---
+            let iAC = pInv / vRed;
+            let iBreakerAC = iAC * 1.25;
+            let breakersAC = [15, 20, 25, 30, 32, 40, 50, 63, 80];
+            let breakerAC = breakersAC.find(b => b >= iBreakerAC) || "Revisar manualmente";
+
+            // Guardar en objeto global para el PDF
+            datosCalculados = {
+                pPanel, voc, isc, serie, paralelo, tempMin, coefTemp, pInv, vRed,
+                vMaxArray, iMaxString, iMaxArray, pTotal, breakerDC, tensionBreakerDC, iAC, breakerAC
+            };
+
+            // --- RENDERIZAR RESULTADOS EN LA WEB ---
+            let container = document.getElementById('resultados-container');
+            container.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded border-l-4 border-blue-500">
+                        <h3 class="font-bold text-blue-800 mb-2">Arreglo Solar DC</h3>
+                        <p class="text-sm"><strong>Potencia Total:</strong> ${pTotal} W</p>
+                        <p class="text-sm"><strong>Tensión Máx. (en frío):</strong> <span class="text-red-600 font-bold">${vMaxArray.toFixed(1)} V</span></p>
+                        <p class="text-sm"><strong>Corriente Máx. Array:</strong> ${iMaxArray.toFixed(1)} A</p>
+                    </div>
+                    <div class="bg-green-50 p-4 rounded border-l-4 border-green-500">
+                        <h3 class="font-bold text-green-800 mb-2">Inversor / Red AC</h3>
+                        <p class="text-sm"><strong>Potencia Inversor:</strong> ${pInv} W</p>
+                        <p class="text-sm"><strong>Voltaje Red:</strong> ${vRed} V AC</p>
+                        <p class="text-sm"><strong>Corriente Nominal AC:</strong> ${iAC.toFixed(1)} A</p>
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-blue-900 mb-2">Protecciones DC (Lado Paneles)</h3>
+                    <table class="w-full text-sm border-collapse">
+                        <tr class="bg-gray-100 border-b">
+                            <td class="p-2 font-medium">Protección por String (Fusible gPV o Breaker DC)</td>
+                            <td class="p-2 text-right font-bold text-blue-900">${breakerDC} A / ${tensionBreakerDC} V DC</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2 font-medium">Protección General Array (Breaker DC)</td>
+                            <td class="p-2 text-right font-bold text-blue-900">${iMaxArray.toFixed(0)} A / ${tensionBreakerDC} V DC</td>
+                        </tr>
+                        <tr class="bg-gray-100 border-b">
+                            <td class="p-2 font-medium">Protección contra Sobretensiones (SPD)</td>
+                            <td class="p-2 text-right font-bold text-blue-900">Tipo 2 (${tensionBreakerDC}V DC)</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-blue-900 mb-2">Protecciones AC (Lado Red / Inversor)</h3>
+                    <table class="w-full text-sm border-collapse">
+                        <tr class="bg-gray-100 border-b">
+                            <td class="p-2 font-medium">Breaker Magnetotérmico AC (Inversor a Red)</td>
+                            <td class="p-2 text-right font-bold text-blue-900">${breakerAC} A, Curva C, ${vRed}V</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-2 font-medium">Interruptor Diferencial</td>
+                            <td class="p-2 text-right font-bold text-blue-900">30 mA, Tipo A (o Tipo B si inv. sin aislamiento)</td>
+                        </tr>
+                    </table>
+                </div>
+                
+                <button onclick="generarPDF()" class="md:hidden w-full bg-red-600 text-white py-3 rounded-lg font-bold hover:bg-red-500 flex justify-center items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                    Descargar Memoria PDF
+                </button>
+            `;
+        }
+
+        function generarPDF() {
+            // Verificar si ya se calculó algo
+            if (!datosCalculados) {
+                alert("Por favor, calcule el sistema primero antes de descargar el PDF.");
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const d = datosCalculados; // Acceso rápido a los datos
+
+            // Diseño del PDF
+            doc.setFillColor(30, 58, 138); // Azul oscuro
+            doc.rect(0, 0, 210, 30, 'F');
+            
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont("helvetica", "bold");
+            doc.text("CalcSolarPro", 20, 18);
+            
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("Memoria de Calculo - Sistema Fotovoltaico", 20, 24);
+
+            doc.setTextColor(0, 0, 0);
+            
+            // Sección 1: Datos de Entrada
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. Parametros de Entrada", 20, 45);
+            
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Potencia del Panel: ${d.pPanel} W`, 20, 55);
+            doc.text(`Configuracion: ${d.serie}S x ${d.paralelo}P (Total: ${d.pTotal} W)`, 20, 62);
+            doc.text(`Potencia Inversor: ${d.pInv} W - Red: ${d.vRed}V AC`, 20, 69);
+
+            // Sección 2: Cálculos Eléctricos
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Calculos Electricos", 20, 85);
+            
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Tension Maxima Array (en frio): ${d.vMaxArray.toFixed(1)} V DC`, 20, 95);
+            doc.text(`Corriente Maxima Array: ${d.iMaxArray.toFixed(1)} A DC`, 20, 102);
+            doc.text(`Corriente Nominal AC del Inversor: ${d.iAC.toFixed(1)} A AC`, 20, 109);
+
+            // Sección 3: Selección de Protecciones
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.text("3. Seleccion de Protecciones", 20, 125);
+            
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "normal");
+            doc.text(`- Breaker/Fusible DC por String: ${d.breakerDC} A / ${d.tensionBreakerDC} V`, 20, 135);
+            doc.text(`- Breaker General DC: ${d.iMaxArray.toFixed(0)} A / ${d.tensionBreakerDC} V`, 20, 142);
+            doc.text(`- Breaker AC Inversor-Red: ${d.breakerAC} A (Curva C)`, 20, 149);
+            doc.text(`- Diferencial: 30mA Tipo A/B`, 20, 156);
+            doc.text(`- SPD: Tipo 2 en tablero DC y AC`, 20, 163);
+
+            // Footer del PDF
+            doc.setDrawColor(150, 150, 150);
+            doc.line(20, 280, 190, 280);
+            doc.setFontSize(9);
+            doc.setTextColor(100, 100, 100);
+            doc.text("Documento generado por CalcSolarPro | Creado por Yohan Manuel Travieso (c) 2026", 20, 285);
+            doc.text("Advertencia: Orientativo. Validar por tecnico competente.", 20, 290);
+
+            // Descargar
+            doc.save("Memoria_Calculo_Solar.pdf");
+        }
+    </script>
+</body>
+</html>
